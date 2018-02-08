@@ -1,0 +1,32 @@
+{
+  "manifest_version": 2,
+  "name": "Hourglass",
+  "version": "1.0.0",
+  "description": "An extension to record the time you spent on the each web page.",
+  "icons": {
+    "16": "img/icon_big.png",
+    "48": "img/icon_big.png",
+    "128": "img/icon_big.png"
+  },
+  "browser_action": {
+    "default_icon": "img/icon_small.png",
+    "default_title": "Hourglass",
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "scripts": [
+      "library/tld.js",
+      "js/background.js"
+    ]
+  },
+  "content_scripts": [{
+    "matches": ["<all_urls>"],
+    "js": ["js/content.js"],
+    "run_at": "document_start"
+  }],
+  "permissions": [
+    "storage",
+    "tabs",
+    "notifications"
+  ]
+}
