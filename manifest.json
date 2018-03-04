@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Hourglass",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "An extension to record the time you spent on the each web page.",
   "icons": {
     "16": "img/icon_big.png",

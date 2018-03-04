@@ -4,19 +4,22 @@ window.onload = function () {
     var MAX_TIME_RECORDS_SHOWN_NUM = 7;
     var browsingTimeRecords;
     var date = new Date();
-    var today = date.getFullYear() + '-' +(date.getMonth() + 1) + '-' + date.getDate();
+    var month = formateNum(date.getMonth() + 1);
+    var day = formateNum(date.getDate());
+    var today = date.getFullYear() + '-' + month + '-' + day;
 
     var echartsOption = {
         baseOption: {
             timeline : {
                 data : [],
+                axisType: 'category',
                 controlStyle: {
                     showPlayBtn: false
                 },
                 label: {
                     formatter : function(time) {
                         var date = new Date(time);
-                        return (date.getMonth() + 1) + '-' + date.getDate() + '\n' + date.getFullYear();
+                        return formateNum(date.getMonth() + 1) + '-' + formateNum(date.getDate()) + '\n' + date.getFullYear();
                     }
                 },
                 currentIndex: 0
@@ -44,6 +47,10 @@ window.onload = function () {
             myChart.setOption(echartsOption);
         }
     });
+
+    function formateNum(num){
+        return num < 10 ? '0'+ num : num;
+    }
 
     function sortDailyBrowsingTime(browsingTimeRecords) {
         browsingTimeRecords.forEach(function(browsingTimeRecord) {

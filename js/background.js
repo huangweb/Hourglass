@@ -9,13 +9,24 @@ var todaysBrowsingTimeRecord;
 var browsingTimeRecordTimer = null;
 var activePageIdleTimer = null;
 var date = new Date();
-var today = date.getFullYear() + '-' +(date.getMonth() + 1) + '-' + date.getDate();
+var month = formateNum(date.getMonth() + 1);
+var day = formateNum(date.getDate());
+var today = date.getFullYear() + '-' + month + '-' + day;
+
+// only for debugging
+var browsingTimeRecordTimerTemp = [];
+var pageIdleTimeTemp = [];
+// only for debugging
 
 init();
 
 function init() {
     addEventListener();
     initBroweringTimeData();
+}
+
+function formateNum(num){
+    return num < 10 ? '0'+ num : num;
 }
 
 function addEventListener() {
@@ -31,7 +42,7 @@ function addEventListener() {
     chrome.runtime.onMessage.addListener(function(request) {
         var content = request.content;
         if (request.source === 'contentJS' && content.pageStatus === BUSY) {
-            resetActivePageIdleTimer();            
+            resetActivePageIdleTimer();
             if (activePageHostname !== content.hostname)
                 stopCountingBrowsingTime();
             if (!browsingTimeRecordTimer)
@@ -41,17 +52,20 @@ function addEventListener() {
 
     chrome.tabs.onUpdated.addListener(function(tabId, changeInfo) {
         if (changeInfo.status === 'complete') {
+            console.error('页面onUpdated');  //only for debugging
             resetActivePageIdleTimer();
             countActivePageBrowsingtime();
         }
     });
 
     chrome.tabs.onActivated.addListener(function() {
+        console.error('页面onActivated');   //only for debugging
         resetActivePageIdleTimer();
         countActivePageBrowsingtime();
     });
 
     chrome.tabs.onRemoved.addListener(function() {
+        console.error('页面removed');   //only for debugging
         stopCountingBrowsingTime();
         stopCountingPageIdleTime();
     });
@@ -59,17 +73,19 @@ function addEventListener() {
 
 function countActivePageBrowsingtime() {
     chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
-        stopCountingBrowsingTime();        
+        stopCountingBrowsingTime();
+        console.log('tabs',tabs);  //only for debugging
         if (!tabs.length)
             return;
         var currentTabId = tabs[0].id;
         chrome.tabs.get(currentTabId, function(tab) {
-            stopCountingBrowsingTime();            
+            stopCountingBrowsingTime();
+            console.log('currentTabId', currentTabId)  //only for debugging
             if (!tab.url)
                 return;
             var activeTabInfo = tldjs.parse(tab.url);
             if (activeTabInfo.isValid && activeTabInfo.domain) {
-                activeTabId = currentTabId;                
+                activeTabId = currentTabId;
                 activePageHostname = activeTabInfo.hostname;
                 startCountingBrowsingTime(activePageHostname);
             }
@@ -85,8 +101,17 @@ function startCountingBrowsingTime(hostname) {
                 initBroweringTimeData();
                 return;
             }
+
+            //only for debugging
+            console.log('开始计时, hostname:', hostname);
+            console.log('浏览时间计时器数组', browsingTimeRecordTimerTemp);
+            console.log('空闲时间计时器数组', pageIdleTimeTemp);
+            //only for debugging
+
             var date = new Date();
-            var today = date.getFullYear() + '-' +(date.getMonth() + 1) + '-' + date.getDate();
+            var month = formateNum(date.getMonth() + 1);
+            var day = formateNum(date.getDate());
+            var today = date.getFullYear() + '-' + month + '-' + day;
             addTodayRecordIfNeeded(browsingTimeRecords, today);
             var todaysTimeRecords = todaysBrowsingTimeRecord.dailyTimeRecords;
             var isHostnameExsited = todaysTimeRecords.some(function (hostnameTimeRecord) {
@@ -106,20 +131,48 @@ function startCountingBrowsingTime(hostname) {
             });
         })
     }, 1000);
+
+    //only for debugging
+    browsingTimeRecordTimerTemp.push(browsingTimeRecordTimer);
+    //only for debugging
 }
 
 function stopCountingPageIdleTime() {
+    console.error('停止统计空闲时间');   //only for debugging
     clearInterval(activePageIdleTimer);
+
+    //only for debugging
+    pageIdleTimeTemp = pageIdleTimeTemp.filter(function (item) {
+        return item !== activePageIdleTimer;
+    })
+    //only for debugging
+
     activePageIdleTimer = null;
 }
 
 function stopCountingBrowsingTime() {
+    console.error('停止统计网页浏览时间'); //only for debugging
     clearInterval(browsingTimeRecordTimer);
+
+    //only for debugging
+    browsingTimeRecordTimerTemp = browsingTimeRecordTimerTemp.filter(function (item) {
+        return item !== browsingTimeRecordTimer;
+    });
+    //only for debugging
+
     browsingTimeRecordTimer = null;
 }
 
 function resetActivePageIdleTimer() {
+    console.error('复位空间时间统计');   //only for debugging
     clearInterval(activePageIdleTimer);
+
+    //only for debugging
+    pageIdleTimeTemp = pageIdleTimeTemp.filter(function (item) {
+        return item !== activePageIdleTimer;
+    })
+    //only for debugging
+
     activePageIdleTimer = setInterval(function () {
         var message = {
             source: 'background',
@@ -136,6 +189,10 @@ function resetActivePageIdleTimer() {
             }
         });
     }, 60000);
+
+    //only for debugging
+    pageIdleTimeTemp.push(activePageIdleTimer);
+    //only for debugging
 }
 
 function initBroweringTimeData() {
